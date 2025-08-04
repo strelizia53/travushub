@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\Route;
 
 //route for home
 Route::view('/', 'pages.home')->name('home');
-// reigster route
+// register route
 Route::get('/register', function () {
     return view('pages.auth.register');
 })->middleware('guest')->name('register');
+// login route
 Route::get('/login', function () {
     return view('pages.auth.login');
-})->middleware('guest')->name('login');
-Route::view('/profiel', 'pages.profile')->name('profile'); 
+})->middleware('guest')->name('login'); 
+//profile route
+Route::view('/profie', 'pages.profile')->name('profile'); 
 // to implement the profile page

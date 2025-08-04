@@ -9,8 +9,8 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
 
@@ -21,8 +21,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Ensure Fortify's routes are enabled
-        $this->app->register(\Laravel\Fortify\FortifyServiceProvider::class);
+        //
     }
 
     /**
@@ -30,14 +29,16 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register action classes
-        Fortify::createUsersUsing(\App\Actions\Fortify\CreateNewUser::class);
+        // Fortify action classes
+        Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
 
-        // 👇 Register your custom views
+        // Default login with email (no need to redefine Fortify::username)
+
+        // Views
         Fortify::registerView(function () {
             return view('pages.auth.register');
         });
@@ -46,15 +47,14 @@ class FortifyServiceProvider extends ServiceProvider
             return view('pages.auth.login');
         });
 
-        // Throttle login attempts
+        // Login rate limiting
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(
-                Str::lower($request->input(Fortify::username())).'|'.$request->ip()
-            );
+            $email = $request->input('email');
 
-            return Limit::perMinute(5)->by($throttleKey);
+            return Limit::perMinute(5)->by(Str::lower($email).'|'.$request->ip());
         });
 
+        // Two-factor rate limiting
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
